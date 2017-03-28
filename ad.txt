@@ -1,0 +1,69 @@
+var express = require('express');
+var router = express.Router();
+
+
+var ActiveDirectory = require('activedirectory');
+
+var config = {
+  url: 'ldap://',
+  baseDN: 'dc=,dc=local',
+  username: '',
+  password: ''
+}
+
+var ad = new ActiveDirectory(config);
+
+function authenticate(username, password) {
+  ad.authenticate(username, password, function(err, auth) {
+    if (err) {
+      console.log('ERROR: '+JSON.stringify(err));
+      return;
+    }
+
+    if (auth) {
+      console.log('Authenticated!');
+    }
+    else {
+      console.log('Authentication failed!');
+    }
+  });
+}
+
+function findUser(sAMAccountName) {
+  ad.findUser(sAMAccountName, function(err, user) {
+    if (err) {
+      console.log('ERROR: ' +JSON.stringify(err));
+      return;
+    }
+
+    if (! user) console.log('User: ' + sAMAccountName + ' not found.');
+    else console.log(JSON.stringify(user));
+  });
+}
+
+
+router.get('/', function(req, res, next) {
+  res.json('{hola: 3}');
+  //res.render('index', { title: 'Express' });
+
+});
+
+router.get('/server', function(req, res, next){
+  //res.json('{hola: 4}');
+  var sAMAccountName = '';
+  var resultado = findUser(sAMAccountName);
+  console.log(resultado);
+
+  ad.findUser(sAMAccountName, function(err, user) {
+    if (err) {
+      console.log('ERROR: ' +JSON.stringify(err));
+      return;
+    }
+
+    if (! user) console.log('User: ' + sAMAccountName + ' not found.');
+    else console.log(JSON.stringify(user));
+    res.json(user);
+  });
+})
+
+module.exports = router;
